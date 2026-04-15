@@ -1,0 +1,270 @@
+[gd_scene load_steps=6 format=3 uid="uid://survival_game_001"]
+
+[ext_resource type="Script" path="res://scripts/game.gd" id="1_game"]
+[ext_resource type="Script" path="res://scripts/world.gd" id="2_world"]
+[ext_resource type="Script" path="res://scripts/hud.gd" id="3_hud"]
+[ext_resource type="Script" path="res://scripts/mobile_controls.gd" id="4_mobile"]
+[ext_resource type="Script" path="res://scripts/pause_menu.gd" id="5_pause"]
+
+[node name="Game" type="Node2D"]
+script = ExtResource("1_game")
+
+[node name="World" type="Node2D" parent="."]
+script = ExtResource("2_world")
+z_index = -1
+
+[node name="Entities" type="Node2D" parent="."]
+
+[node name="Projectiles" type="Node2D" parent="."]
+
+[node name="Effects" type="Node2D" parent="."]
+
+[node name="Items" type="Node2D" parent="."]
+
+[node name="Camera2D" type="Camera2D" parent="."]
+limit_left = 0
+limit_top = 0
+limit_right = 6000
+limit_bottom = 640
+position_smoothing_enabled = true
+position_smoothing_speed = 5.0
+
+[node name="HUD" type="CanvasLayer" parent="."]
+script = ExtResource("3_hud")
+
+[node name="Margin" type="MarginContainer" parent="HUD"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 8.0
+offset_top = 8.0
+offset_right = -8.0
+offset_bottom = -8.0
+
+[node name="VBox" type="VBoxContainer" parent="HUD/Margin"]
+
+[node name="TopRow" type="HBoxContainer" parent="HUD/Margin/VBox"]
+
+[node name="HealthBar" type="ProgressBar" parent="HUD/Margin/VBox/TopRow"]
+custom_minimum_size = Vector2(160, 20)
+max_value = 100
+value = 100
+
+[node name="HealthLabel" type="Label" parent="HUD/Margin/VBox/TopRow"]
+text = "100/100"
+
+[node name="AmmoLabel" type="Label" parent="HUD/Margin/VBox/TopRow"]
+text = "AMMO  20"
+
+[node name="GrenadeLabel" type="Label" parent="HUD/Margin/VBox/TopRow"]
+text = "GRENADES  5"
+
+[node name="ScoreLabel" type="Label" parent="HUD/Margin/VBox/TopRow"]
+text = "SCORE  0"
+horizontal_alignment = 2
+size_flags_horizontal = 3
+
+[node name="ComboLabel" type="Label" parent="HUD/Margin/VBox/TopRow"]
+text = "x1 COMBO!"
+modulate = Color(1, 0.84, 0, 1)
+visible = false
+
+[node name="XPRow" type="HBoxContainer" parent="HUD/Margin/VBox"]
+
+[node name="XPBar" type="ProgressBar" parent="HUD/Margin/VBox/XPRow"]
+custom_minimum_size = Vector2(120, 12)
+max_value = 500
+value = 0
+
+[node name="XPLabel" type="Label" parent="HUD/Margin/VBox/XPRow"]
+text = "XP 0/500"
+
+[node name="LevelLabel" type="Label" parent="HUD/Margin/VBox/XPRow"]
+text = "LVL 1"
+
+[node name="AchievementPopup" type="PanelContainer" parent="HUD"]
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -300
+offset_top = 60
+offset_right = -8
+offset_bottom = 160
+modulate = Color(1, 1, 1, 0)
+visible = false
+
+[node name="Label" type="Label" parent="HUD/AchievementPopup"]
+text = "ACHIEVEMENT!"
+autowrap_mode = 3
+
+[node name="DeathScreen" type="Control" parent="HUD"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+visible = false
+
+[node name="VBox" type="VBoxContainer" parent="HUD/DeathScreen"]
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -120
+offset_top = -100
+offset_right = 120
+offset_bottom = 100
+
+[node name="GameOverLabel" type="Label" parent="HUD/DeathScreen/VBox"]
+text = "GAME OVER"
+horizontal_alignment = 1
+
+[node name="ScoreLabel" type="Label" parent="HUD/DeathScreen/VBox"]
+text = "SCORE: 0"
+horizontal_alignment = 1
+
+[node name="HiLabel" type="Label" parent="HUD/DeathScreen/VBox"]
+text = "BEST: 0"
+horizontal_alignment = 1
+
+[node name="RestartBtn" type="Button" parent="HUD/DeathScreen/VBox"]
+text = "PLAY AGAIN"
+
+[node name="MenuBtn" type="Button" parent="HUD/DeathScreen/VBox"]
+text = "MAIN MENU"
+
+[node name="DeathOverlay" type="ColorRect" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+color = Color(0.922, 0.255, 0.212, 0.0)
+visible = false
+
+[node name="LevelBanner" type="Label" parent="."]
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -200
+offset_top = -40
+offset_right = 200
+offset_bottom = 40
+text = "LEVEL 1"
+horizontal_alignment = 1
+vertical_alignment = 1
+visible = false
+
+[node name="MobileControls" type="CanvasLayer" parent="."]
+script = ExtResource("4_mobile")
+
+[node name="Buttons" type="Control" parent="MobileControls"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+
+[node name="BtnLeft" type="Button" parent="MobileControls/Buttons"]
+anchors_preset = 7
+anchor_left = 0.0
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 10
+offset_top = -120
+offset_right = 100
+offset_bottom = -10
+text = "◀"
+
+[node name="BtnRight" type="Button" parent="MobileControls/Buttons"]
+anchors_preset = 7
+anchor_left = 0.0
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 110
+offset_top = -120
+offset_right = 200
+offset_bottom = -10
+text = "▶"
+
+[node name="BtnJump" type="Button" parent="MobileControls/Buttons"]
+anchors_preset = 9
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -320
+offset_top = -120
+offset_right = -220
+offset_bottom = -10
+text = "JUMP"
+
+[node name="BtnShoot" type="Button" parent="MobileControls/Buttons"]
+anchors_preset = 9
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -210
+offset_top = -120
+offset_right = -110
+offset_bottom = -10
+text = "SHOOT"
+
+[node name="BtnGrenade" type="Button" parent="MobileControls/Buttons"]
+anchors_preset = 9
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -100
+offset_top = -120
+offset_right = -10
+offset_bottom = -10
+text = "BOMB"
+
+[node name="BtnPause" type="Button" parent="MobileControls/Buttons"]
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -60
+offset_top = 10
+offset_right = -10
+offset_bottom = 50
+text = "II"
+
+[node name="PauseMenu" type="Control" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+visible = false
+script = ExtResource("5_pause")
+
+[node name="VBox" type="VBoxContainer" parent="PauseMenu"]
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -100
+offset_top = -150
+offset_right = 100
+offset_bottom = 150
+
+[node name="PausedLabel" type="Label" parent="PauseMenu/VBox"]
+text = "PAUSED"
+horizontal_alignment = 1
+
+[node name="BtnResume" type="Button" parent="PauseMenu/VBox"]
+text = "Resume"
+
+[node name="MusicSlider" type="HSlider" parent="PauseMenu/VBox"]
+max_value = 100
+value = 30
+
+[node name="SFXSlider" type="HSlider" parent="PauseMenu/VBox"]
+max_value = 100
+value = 80
+
+[node name="BtnRestart" type="Button" parent="PauseMenu/VBox"]
+text = "Restart"
+
+[node name="BtnMenu" type="Button" parent="PauseMenu/VBox"]
+text = "Main Menu"

@@ -1,0 +1,111 @@
+[gd_scene load_steps=2 format=3 uid="uid://survival_menu_001"]
+
+[ext_resource type="Script" path="res://scripts/main_menu.gd" id="1_menu"]
+
+[node name="MainMenu" type="Control"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+script = ExtResource("1_menu")
+
+[node name="Background" type="ColorRect" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+color = Color(0.08, 0.08, 0.14, 1)
+z_index = -1
+
+[node name="Center" type="VBoxContainer" parent="."]
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -180
+offset_top = -260
+offset_right = 180
+offset_bottom = 260
+alignment = 1
+
+[node name="Title" type="Label" parent="Center"]
+text = "SURVIVAL
+Hunter Chronicles"
+horizontal_alignment = 1
+theme_override_font_sizes/font_size = 36
+
+[node name="HiScore" type="Label" parent="Center"]
+text = "BEST: 0"
+horizontal_alignment = 1
+modulate = Color(1, 0.84, 0, 1)
+
+[node name="DailyLabel" type="Label" parent="Center"]
+text = "Daily Kills: 0"
+horizontal_alignment = 1
+modulate = Color(0.5, 1, 0.5, 1)
+
+[node name="Spacer" type="Control" parent="Center"]
+custom_minimum_size = Vector2(0, 20)
+
+[node name="BtnPlay" type="Button" parent="Center"]
+custom_minimum_size = Vector2(260, 50)
+text = "PLAY STORY"
+theme_override_font_sizes/font_size = 20
+
+[node name="BtnEndless" type="Button" parent="Center"]
+custom_minimum_size = Vector2(260, 44)
+text = "ENDLESS MODE ∞"
+theme_override_font_sizes/font_size = 18
+
+[node name="BtnDaily" type="Button" parent="Center"]
+custom_minimum_size = Vector2(260, 44)
+text = "DAILY CHALLENGE"
+theme_override_font_sizes/font_size = 18
+
+[node name="BtnAchievements" type="Button" parent="Center"]
+custom_minimum_size = Vector2(260, 40)
+text = "ACHIEVEMENTS"
+
+[node name="BtnSettings" type="Button" parent="Center"]
+custom_minimum_size = Vector2(260, 40)
+text = "SETTINGS"
+
+[node name="BtnQuit" type="Button" parent="Center"]
+custom_minimum_size = Vector2(260, 40)
+text = "QUIT"
+
+[node name="VersionLabel" type="Label" parent="."]
+anchors_preset = 4
+anchor_left = 0.0
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_top = -24
+offset_right = 400
+offset_bottom = 0
+text = "v1.0"
+modulate = Color(1, 1, 1, 0.4)
+
+[node name="SettingsPanel" type="PanelContainer" parent="."]
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -150
+offset_top = -120
+offset_right = 150
+offset_bottom = 120
+visible = false
+
+[node name="AchievementsPanel" type="PanelContainer" parent="."]
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -200
+offset_top = -200
+offset_right = 200
+offset_bottom = 200
+visible = false
+
+[node name="List" type="VBoxContainer" parent="AchievementsPanel"]

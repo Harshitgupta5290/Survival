@@ -1,0 +1,25 @@
+[gd_scene load_steps=4 format=3 uid="uid://survival_player_001"]
+
+[ext_resource type="Script" path="res://scripts/player.gd" id="1_player"]
+
+[sub_resource type="RectangleShape2D" id="RectShape_body"]
+size = Vector2(28, 58)
+
+[sub_resource type="RectangleShape2D" id="RectShape_shoot"]
+size = Vector2(4, 4)
+
+[node name="Player" type="CharacterBody2D"]
+collision_layer = 2
+collision_mask = 1
+script = ExtResource("1_player")
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
+position = Vector2(0, 0)
+scale = Vector2(1.65, 1.65)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+position = Vector2(0, 0)
+shape = SubResource("RectShape_body")
+
+[node name="ShootPos" type="Marker2D" parent="."]
+position = Vector2(20, -10)

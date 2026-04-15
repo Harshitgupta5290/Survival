@@ -1,0 +1,21 @@
+[gd_scene load_steps=3 format=3 uid="uid://survival_grenade_001"]
+
+[ext_resource type="Script" path="res://scripts/grenade.gd" id="1_grenade"]
+
+[sub_resource type="CircleShape2D" id="CircleShape_grenade"]
+radius = 8.0
+
+[node name="Grenade" type="RigidBody2D"]
+collision_layer = 1
+collision_mask = 1
+script = ExtResource("1_grenade")
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+scale = Vector2(0.8, 0.8)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("CircleShape_grenade")
+
+[node name="FuseTimer" type="Timer" parent="."]
+wait_time = 2.2
+one_shot = true

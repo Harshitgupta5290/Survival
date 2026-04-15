@@ -1,0 +1,16 @@
+[gd_scene load_steps=3 format=3 uid="uid://survival_itembox_001"]
+
+[ext_resource type="Script" path="res://scripts/item_box.gd" id="1_itembox"]
+
+[sub_resource type="RectangleShape2D" id="RectShape_item"]
+size = Vector2(32, 32)
+
+[node name="ItemBox" type="Area2D"]
+collision_layer = 8
+collision_mask = 2
+script = ExtResource("1_itembox")
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("RectShape_item")

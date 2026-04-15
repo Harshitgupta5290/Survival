@@ -1,0 +1,13 @@
+[gd_scene load_steps=2 format=3 uid="uid://survival_exit_001"]
+
+[sub_resource type="RectangleShape2D" id="RectShape_exit"]
+size = Vector2(40, 60)
+
+[node name="ExitZone" type="Area2D"]
+collision_layer = 8
+collision_mask = 2
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("RectShape_exit")
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
