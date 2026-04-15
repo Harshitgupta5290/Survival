@@ -31,6 +31,14 @@ extends CanvasLayer
 var _target_health_ratio : float = 1.0
 var _current_ratio       : float = 1.0
 
+# Weapon label (created dynamically)
+var weapon_label : Label = null
+
+# Boss bar (created dynamically at bottom of screen)
+var boss_bar_container : Control      = null
+var boss_bar           : ProgressBar  = null
+var boss_name_label    : Label        = null
+
 # Achievement queue
 var _achievement_queue   : Array = []
 var _showing_achievement : bool  = false
@@ -40,6 +48,15 @@ var _showing_achievement : bool  = false
 func _ready() -> void:
 	achievement_popup.visible = false
 	death_screen.visible      = false
+
+	# Weapon label — added dynamically to TopRow
+	weapon_label = Label.new()
+	weapon_label.text = "[ Pistol ]"
+	weapon_label.modulate = Color(0.4, 1.0, 0.4)
+	$Margin/VBox/TopRow.add_child(weapon_label)
+
+	# Wire WeaponManager unlock popup
+	WeaponManager.weapon_unlocked.connect(_on_weapon_unlocked)
 
 	# Wire GameManager signals
 	GameManager.score_changed.connect(on_score_changed)
@@ -81,6 +98,55 @@ func on_ammo_changed(ammo: int) -> void:
 
 func on_grenade_changed(count: int) -> void:
 	grenade_label.text = "GRENADES  %d" % count
+
+func on_weapon_changed(weapon_name: String) -> void:
+	if weapon_label:
+		weapon_label.text = "[ %s ]" % weapon_name
+
+func _on_weapon_unlocked(weapon_id: int, name: String) -> void:
+	_queue_achievement("New Weapon!", "%s unlocked — press E to switch" % name)
+
+# ── Boss health bar ───────────────────────────
+
+func show_boss_bar(boss_name: String, max_hp: int) -> void:
+	if boss_bar_container == null:
+		boss_bar_container = Control.new()
+		boss_bar_container.set_anchors_preset(Control.PRESET_BOTTOM_WIDE)
+		boss_bar_container.offset_top    = -60
+		boss_bar_container.offset_bottom = 0
+
+		boss_name_label = Label.new()
+		boss_name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		boss_name_label.modulate = Color(1, 0.3, 0.3)
+		boss_name_label.add_theme_font_size_override("font_size", 16)
+		boss_name_label.set_anchors_preset(Control.PRESET_TOP_WIDE)
+		boss_name_label.offset_top    = 4
+		boss_name_label.offset_bottom = 28
+
+		boss_bar = ProgressBar.new()
+		boss_bar.set_anchors_preset(Control.PRESET_BOTTOM_WIDE)
+		boss_bar.offset_left   = 60
+		boss_bar.offset_right  = -60
+		boss_bar.offset_top    = -26
+		boss_bar.offset_bottom = -6
+		boss_bar.modulate = Color(1, 0.2, 0.2)
+
+		boss_bar_container.add_child(boss_name_label)
+		boss_bar_container.add_child(boss_bar)
+		add_child(boss_bar_container)
+
+	boss_name_label.text  = boss_name
+	boss_bar.max_value    = max_hp
+	boss_bar.value        = max_hp
+	boss_bar_container.visible = true
+
+func on_boss_health_changed(hp: int, max_hp: int) -> void:
+	if boss_bar:
+		boss_bar.value = hp
+
+func hide_boss_bar() -> void:
+	if boss_bar_container:
+		boss_bar_container.visible = false
 
 func on_score_changed(score: int) -> void:
 	score_label.text = "SCORE  %d" % score
@@ -129,9 +195,12 @@ func _show_next_achievement() -> void:
 # ── Death screen ──────────────────────────────
 
 func show_death_screen(score: int, hi_score: int) -> void:
-	death_screen.visible  = true
+	death_screen.visible   = true
 	death_score_label.text = "SCORE: %d" % score
-	death_hi_label.text   = "BEST: %d" % hi_score
+	death_hi_label.text    = "BEST: %d" % hi_score
+	# Auto-submit to leaderboard if score qualifies
+	if score > 0 and Leaderboard.ENABLED:
+		Leaderboard.submit_score("HNT", score)   # default name; add name input later
 
 func _on_restart() -> void:
 	death_screen.visible = false

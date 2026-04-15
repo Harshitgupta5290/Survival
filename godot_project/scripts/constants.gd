@@ -13,7 +13,8 @@ const ROWS           : int   = 16
 const COLS           : int   = 150
 const TILE_SIZE      : int   = 40        # SCREEN_HEIGHT / ROWS
 const TILE_TYPES     : int   = 21
-const MAX_LEVELS     : int   = 2
+const MAX_LEVELS     : int   = 7
+const TUTORIAL_LEVEL : String = "tutorial"
 const SCROLL_THRESH  : int   = 200
 
 # ── Physics ──────────────────────────────────
@@ -95,6 +96,22 @@ const LAYER_PLAYER  : int = 2   # bit 1
 const LAYER_ENEMY   : int = 4   # bit 2
 const LAYER_PICKUP  : int = 8   # bit 3
 const LAYER_BULLET  : int = 16  # bit 4
+
+# ── Weapons ──────────────────────────────────
+const WEAPON_PISTOL_COOLDOWN   : float = 0.25
+const WEAPON_PISTOL_DAMAGE     : int   = 25
+const WEAPON_PISTOL_AMMO       : int   = 20
+const WEAPON_SHOTGUN_COOLDOWN  : float = 0.7
+const WEAPON_SHOTGUN_DAMAGE    : int   = 15   # per pellet (5 pellets)
+const WEAPON_SHOTGUN_PELLETS   : int   = 5
+const WEAPON_SHOTGUN_SPREAD    : float = 0.25 # radians
+const WEAPON_SHOTGUN_AMMO      : int   = 8
+const WEAPON_SNIPER_COOLDOWN   : float = 1.2
+const WEAPON_SNIPER_DAMAGE     : int   = 90
+const WEAPON_SNIPER_AMMO       : int   = 5
+const WEAPON_SNIPER_SPEED      : float = 1600.0
+const WEAPON_UNLOCK_SHOTGUN_LV : int   = 3    # player level required
+const WEAPON_UNLOCK_SNIPER_LV  : int   = 6
 
 # ── Colors ───────────────────────────────────
 const COLOR_BG        := Color(0.565, 0.788, 0.471)   # (144,201,120)

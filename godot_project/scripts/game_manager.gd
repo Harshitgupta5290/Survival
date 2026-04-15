@@ -32,6 +32,11 @@ var achievements       : Dictionary = {}
 var daily_kills        : int   = 0
 var last_play_date     : String = ""
 
+# ── Mode flags ───────────────────────────────
+var is_endless          : bool = false
+var is_daily_challenge  : bool = false
+var start_tutorial      : bool = false
+
 # ── Adaptive difficulty ───────────────────────
 var difficulty_multiplier : float = 1.0
 
@@ -147,6 +152,9 @@ func reset_session() -> void:
 	combo_timer = 0.0
 	difficulty_multiplier = 1.0
 	took_damage_this_level = false
+	is_endless = false
+	is_daily_challenge = false
+	start_tutorial = false
 	emit_signal("score_changed", 0)
 	emit_signal("combo_changed", 0)
 	emit_signal("level_changed", 1)

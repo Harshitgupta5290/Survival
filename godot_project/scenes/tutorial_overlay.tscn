@@ -1,0 +1,32 @@
+[gd_scene load_steps=2 format=3 uid="uid://survival_tutorial_001"]
+
+[ext_resource type="Script" path="res://scripts/tutorial_overlay.gd" id="1_tut"]
+
+[node name="TutorialOverlay" type="CanvasLayer"]
+script = ExtResource("1_tut")
+
+[node name="Panel" type="PanelContainer" parent="."]
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -220
+offset_top = -70
+offset_right = 220
+offset_bottom = 70
+modulate = Color(1, 1, 1, 0)
+visible = false
+
+[node name="VBox" type="VBoxContainer" parent="Panel"]
+
+[node name="Title" type="Label" parent="Panel/VBox"]
+text = "MOVE"
+horizontal_alignment = 1
+theme_override_font_sizes/font_size = 22
+modulate = Color(1, 0.84, 0, 1)
+
+[node name="Body" type="Label" parent="Panel/VBox"]
+text = "Press A and D to walk"
+horizontal_alignment = 1
+autowrap_mode = 3

@@ -80,14 +80,13 @@ func _build_background() -> void:
 # ── Level loading ────────────────────────────
 
 func load_level(level_index: int) -> Dictionary:
-	# Clear old tiles
-	_clear()
+	return load_level_file("res://assets/levels/level%d_data.csv" % level_index)
 
-	var path := "res://assets/levels/level%d_data.csv" % level_index
+func load_level_file(path: String) -> Dictionary:
+	_clear()
 	if not FileAccess.file_exists(path):
 		push_error("Level file not found: " + path)
 		return {}
-
 	var grid : Array = _read_csv(path)
 	return _build_level(grid)
 

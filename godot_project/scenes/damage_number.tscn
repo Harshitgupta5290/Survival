@@ -1,0 +1,17 @@
+[gd_scene load_steps=2 format=3 uid="uid://survival_dmgnum_001"]
+
+[ext_resource type="Script" path="res://scripts/damage_number.gd" id="1_dmg"]
+
+[node name="DamageNumber" type="Node2D"]
+script = ExtResource("1_dmg")
+z_index = 10
+
+[node name="Label" type="Label" parent="."]
+offset_left = -30
+offset_top = -16
+offset_right = 30
+offset_bottom = 16
+horizontal_alignment = 1
+theme_override_font_sizes/font_size = 14
+text = "-25"
+modulate = Color(1, 0.3, 0.3, 1)

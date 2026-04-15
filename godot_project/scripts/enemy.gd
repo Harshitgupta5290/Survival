@@ -15,6 +15,7 @@ extends CharacterBody2D
 class_name Enemy
 
 signal enemy_died(position: Vector2)
+signal enemy_hit(amount: int, position: Vector2)
 
 # ── AI States ────────────────────────────────
 enum State { PATROL, ALERT, ATTACK, TAKE_COVER, FLEE, DEAD }
@@ -228,9 +229,13 @@ func take_damage(amount: int) -> void:
 	if not alive:
 		return
 	health -= amount
-	# Flash red
-	sprite.modulate = Color(1, 0.2, 0.2)
-	await get_tree().create_timer(0.1).timeout
+	emit_signal("enemy_hit", amount, global_position)
+	# Flash white then back (feels more impactful than red)
+	sprite.modulate = Color(2.0, 2.0, 2.0)
+	await get_tree().create_timer(0.05).timeout
+	if is_instance_valid(self):
+		sprite.modulate = Color(1, 0.2, 0.2)
+	await get_tree().create_timer(0.05).timeout
 	if is_instance_valid(self):
 		sprite.modulate = Color(1, 1, 1)
 

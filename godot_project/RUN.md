@@ -38,6 +38,7 @@ The game starts at the **Main Menu**.
 | Jump | W |
 | Shoot | Space |
 | Throw Grenade | Q |
+| Switch Weapon | E |
 | Pause | Escape |
 
 On mobile / touchscreen — on-screen buttons appear automatically.
@@ -48,9 +49,36 @@ On mobile / touchscreen — on-screen buttons appear automatically.
 
 | Mode | What it is |
 |---|---|
-| **Play Story** | 2 hand-crafted levels with CSV tile maps |
+| **Tutorial** | Guided intro — learn movement, shooting, grenades, combos |
+| **Play Story** | 7 hand-crafted levels ending with a 3-phase boss fight |
 | **Endless Mode** | AI-generated infinite waves, gets harder each round |
 | **Daily Challenge** | Same worldwide seed each day — unique modifiers |
+
+---
+
+## Weapons
+
+Weapons unlock automatically as you level up via XP:
+
+| Weapon | Unlocks | Style |
+|---|---|---|
+| Pistol | From the start | Fast, reliable, 20 ammo |
+| Shotgun | Player level 3 | 5 pellets per shot, close-range devastation |
+| Sniper | Player level 6 | One-shot power (90 dmg), long reload |
+
+Press **E** to cycle between unlocked weapons.
+
+---
+
+## Boss Fight (Level 7)
+
+The Commander has 3 phases triggered by remaining HP:
+
+| Phase | HP % | Behaviour |
+|---|---|---|
+| 1 | 100–60% | Charges + burst shoots |
+| 2 | 60–25% | Adds grenade spam, moves faster, orange tint |
+| 3 | < 25% | Enrage — rapid fire, spawns minions every 8s, red glow |
 
 ---
 
@@ -81,9 +109,25 @@ Without a key the game works fine — it falls back to built-in dialogue.
 
 ---
 
+## Enabling the Online Leaderboard (optional)
+
+1. Create a free project at [console.firebase.google.com](https://console.firebase.google.com)
+2. Enable **Realtime Database** (Start in test mode)
+3. Copy the database URL (looks like `https://your-project-default-rtdb.firebaseio.com`)
+4. Open `scripts/leaderboard.gd` and edit:
+
+```gdscript
+const FIREBASE_URL := "https://your-project-default-rtdb.firebaseio.com/leaderboard.json"
+const ENABLED      := true
+```
+
+5. Scores are auto-submitted from the death screen and viewable from the main menu.
+
+---
+
 ## Tweaking the Game
 
-All game values (speed, gravity, damage, scoring) are in one file:
+All game values (speed, gravity, damage, scoring, weapon stats) are in one file:
 
 ```
 scripts/constants.gd

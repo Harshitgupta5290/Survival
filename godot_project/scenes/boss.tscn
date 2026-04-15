@@ -1,0 +1,18 @@
+[gd_scene load_steps=3 format=3 uid="uid://survival_boss_001"]
+
+[ext_resource type="Script" path="res://scripts/boss.gd" id="1_boss"]
+
+[sub_resource type="RectangleShape2D" id="RectShape_boss"]
+size = Vector2(46, 100)
+
+[node name="Boss" type="CharacterBody2D"]
+collision_layer = 4
+collision_mask = 3
+script = ExtResource("1_boss")
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
+position = Vector2(0, -4)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+position = Vector2(0, -50)
+shape = SubResource("RectShape_boss")

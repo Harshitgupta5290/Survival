@@ -46,6 +46,12 @@ modulate = Color(0.5, 1, 0.5, 1)
 [node name="Spacer" type="Control" parent="Center"]
 custom_minimum_size = Vector2(0, 20)
 
+[node name="BtnTutorial" type="Button" parent="Center"]
+custom_minimum_size = Vector2(260, 40)
+text = "HOW TO PLAY  ▶"
+theme_override_font_sizes/font_size = 15
+modulate = Color(0.6, 1.0, 0.6, 1)
+
 [node name="BtnPlay" type="Button" parent="Center"]
 custom_minimum_size = Vector2(260, 50)
 text = "PLAY STORY"
@@ -60,6 +66,11 @@ theme_override_font_sizes/font_size = 18
 custom_minimum_size = Vector2(260, 44)
 text = "DAILY CHALLENGE"
 theme_override_font_sizes/font_size = 18
+
+[node name="BtnLeaderboard" type="Button" parent="Center"]
+custom_minimum_size = Vector2(260, 40)
+text = "LEADERBOARD"
+modulate = Color(1, 0.84, 0, 1)
 
 [node name="BtnAchievements" type="Button" parent="Center"]
 custom_minimum_size = Vector2(260, 40)
@@ -109,3 +120,32 @@ offset_bottom = 200
 visible = false
 
 [node name="List" type="VBoxContainer" parent="AchievementsPanel"]
+
+[node name="LeaderboardPanel" type="PanelContainer" parent="."]
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -220
+offset_top = -240
+offset_right = 220
+offset_bottom = 240
+visible = false
+
+[node name="VBox" type="VBoxContainer" parent="LeaderboardPanel"]
+
+[node name="Title" type="Label" parent="LeaderboardPanel/VBox"]
+text = "TOP 10 HUNTERS"
+horizontal_alignment = 1
+theme_override_font_sizes/font_size = 18
+modulate = Color(1, 0.84, 0, 1)
+
+[node name="List" type="VBoxContainer" parent="LeaderboardPanel/VBox"]
+
+[node name="Status" type="Label" parent="LeaderboardPanel/VBox"]
+text = "Loading..."
+horizontal_alignment = 1
+
+[node name="BtnClose" type="Button" parent="LeaderboardPanel/VBox"]
+text = "Close"

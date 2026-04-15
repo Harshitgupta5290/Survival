@@ -35,25 +35,49 @@ var scroll_offset : float  = 0.0
 var level_max_x   : float  = 6000.0
 const SCROLL_THRESH : int  = Constants.SCROLL_THRESH
 
+# Tutorial
+var is_tutorial       : bool = false
+var tutorial_overlay  : Node = null
+
 # Preloaded scenes
-var player_scene   : PackedScene = preload("res://scenes/player.tscn")
-var enemy_scene    : PackedScene = preload("res://scenes/enemy.tscn")
-var item_box_scene : PackedScene = preload("res://scenes/item_box.tscn")
-var exit_scene     : PackedScene = preload("res://scenes/exit_zone.tscn")
+var player_scene           : PackedScene = preload("res://scenes/player.tscn")
+var enemy_scene            : PackedScene = preload("res://scenes/enemy.tscn")
+var item_box_scene         : PackedScene = preload("res://scenes/item_box.tscn")
+var exit_scene             : PackedScene = preload("res://scenes/exit_zone.tscn")
+var tutorial_overlay_scene : PackedScene = preload("res://scenes/tutorial_overlay.tscn")
+var damage_number_scene    : PackedScene = preload("res://scenes/damage_number.tscn")
+var boss_scene             : PackedScene = preload("res://scenes/boss.tscn")
 
 # ─────────────────────────────────────────────
 
 func _ready() -> void:
 	death_overlay.visible = false
 	pause_menu.visible    = false
-	GameManager.reset_session()
-	_start_level(current_level)
+	if GameManager.start_tutorial:
+		is_tutorial = true
+		GameManager.start_tutorial = false
+	if is_tutorial:
+		_start_tutorial()
+	else:
+		_start_level(current_level)
+
+func _start_tutorial() -> void:
+	level_ending = false
+	_clear_entities()
+	var spawn_data : Dictionary = world.load_level_file("res://assets/levels/tutorial_data.csv")
+	_setup_level_from_spawn(spawn_data, "TUTORIAL")
+	# Attach tutorial overlay
+	tutorial_overlay = tutorial_overlay_scene.instantiate()
+	add_child(tutorial_overlay)
+	tutorial_overlay.set_player(player_node)
 
 func _start_level(level_num: int) -> void:
 	level_ending = false
 	_clear_entities()
-
 	var spawn_data : Dictionary = world.load_level(level_num)
+	_setup_level_from_spawn(spawn_data, "LEVEL %d" % level_num)
+
+func _setup_level_from_spawn(spawn_data: Dictionary, banner_text: String) -> void:
 	world.level_length_set.connect(_on_level_length_set, CONNECT_ONE_SHOT)
 
 	# Spawn player
@@ -62,10 +86,12 @@ func _start_level(level_num: int) -> void:
 	player_node.add_to_group("player")
 	entities.add_child(player_node)
 
-	# Wire player signals → HUD
+	# Wire player signals → HUD + juice
 	player_node.health_changed.connect(hud.on_health_changed)
 	player_node.ammo_changed.connect(hud.on_ammo_changed)
 	player_node.grenade_changed.connect(hud.on_grenade_changed)
+	player_node.weapon_changed.connect(hud.on_weapon_changed)
+	player_node.damage_taken.connect(_on_player_damage_taken)
 	player_node.player_died.connect(_on_player_died)
 	player_node.level_complete.connect(_on_level_complete)
 
@@ -73,6 +99,7 @@ func _start_level(level_num: int) -> void:
 	hud.on_health_changed(player_node.health, player_node.max_health)
 	hud.on_ammo_changed(player_node.ammo)
 	hud.on_grenade_changed(player_node.grenades)
+	hud.on_weapon_changed(player_node.current_weapon)
 
 	# Spawn enemies
 	for epos in spawn_data.get("enemies", []):
@@ -96,10 +123,23 @@ func _start_level(level_num: int) -> void:
 	scroll_offset = 0.0
 
 	# Banner
-	_show_level_banner("LEVEL %d" % level_num)
+	_show_level_banner(banner_text)
 
 	# Music
 	AudioManager.play_music("res://assets/audio/music2.mp3")
+
+	# Wire AI Director if present in scene
+	var director := get_node_or_null("AIDirector")
+	if director:
+		if not director.spawn_boss.is_connected(_spawn_boss):
+			director.spawn_boss.connect(_spawn_boss)
+		if not director.spawn_enemies.is_connected(_on_director_spawn):
+			director.spawn_enemies.connect(_on_director_spawn)
+
+func _on_director_spawn(count: int, _squad_type: String, near_pos: Vector2) -> void:
+	for i in count:
+		var offset := Vector2(randf_range(-60, 60), 0)
+		_spawn_enemy(near_pos + offset)
 
 # ── Physics ───────────────────────────────────
 
@@ -158,6 +198,25 @@ func _spawn_enemy(pos: Vector2) -> void:
 	e.add_to_group("enemy")
 	entities.add_child(e)
 	e.enemy_died.connect(_on_enemy_died)
+	e.enemy_hit.connect(func(amt, p): _spawn_damage_number(p + Vector2(0, -40), amt))
+
+func _spawn_boss(pos: Vector2) -> void:
+	var b : Node2D = boss_scene.instantiate()
+	b.position = pos
+	b.player_ref = player_node
+	entities.add_child(b)
+	b.boss_died.connect(_on_boss_died)
+	b.boss_hit.connect(func(amt, p): _spawn_damage_number(p + Vector2(0,-50), amt))
+	b.boss_health_changed.connect(hud.on_boss_health_changed)
+	b.spawn_minion.connect(_spawn_enemy)
+	hud.show_boss_bar("THE COMMANDER", 500)
+	_shake_camera(10.0, 0.5)
+
+func _on_boss_died(pos: Vector2) -> void:
+	_hit_stop(0.18)
+	_shake_camera(14.0, 0.7)
+	hud.hide_boss_bar()
+	_spawn_damage_number(pos, 0, true)
 
 func _spawn_item(type_str: String, pos: Vector2) -> void:
 	var ib : Node2D = item_box_scene.instantiate()
@@ -193,10 +252,21 @@ func _on_level_complete() -> void:
 	if level_ending:
 		return
 	level_ending = true
-	GameManager.complete_level()
 	AudioManager.stop_music()
-	_show_level_banner("LEVEL COMPLETE!")
 
+	if is_tutorial:
+		_show_level_banner("TUTORIAL COMPLETE!\nYou're ready, Hunter!")
+		if tutorial_overlay and is_instance_valid(tutorial_overlay):
+			tutorial_overlay.queue_free()
+		await get_tree().create_timer(2.5).timeout
+		is_tutorial = false
+		GameManager.reset_session()
+		current_level = 1
+		_start_level(current_level)
+		return
+
+	GameManager.complete_level()
+	_show_level_banner("LEVEL COMPLETE!")
 	await get_tree().create_timer(2.0).timeout
 
 	current_level += 1
@@ -205,8 +275,40 @@ func _on_level_complete() -> void:
 	else:
 		_start_level(current_level)
 
-func _on_enemy_died(_pos: Vector2) -> void:
-	pass   # GameManager already updated via add_kill()
+func _on_player_damage_taken(amount: int, pos: Vector2) -> void:
+	_spawn_damage_number(pos + Vector2(0, -30), amount)
+	_flash_damage_overlay()
+	_shake_camera(4.0, 0.18)
+
+func _on_enemy_died(pos: Vector2) -> void:
+	_hit_stop(0.06)
+	_spawn_damage_number(pos, 0, true)   # "KILL!" flash at death pos
+
+func _spawn_damage_number(pos: Vector2, dmg: int, is_kill: bool = false) -> void:
+	var dn := damage_number_scene.instantiate()
+	effects.add_child(dn)
+	if is_kill:
+		dn.position = pos
+		var lbl : Label = dn.get_node("Label")
+		lbl.text = "KILL!"
+		lbl.modulate = Color(1, 0.84, 0)
+		lbl.theme_override_font_sizes["font_size"] = 18
+	else:
+		dn.setup(dmg, pos)
+
+func _hit_stop(duration: float = 0.07) -> void:
+	Engine.time_scale = 0.04
+	# Use real-time timer so it actually expires while time is frozen
+	await get_tree().create_timer(duration, false, false, true).timeout
+	Engine.time_scale = 1.0
+
+func _flash_damage_overlay() -> void:
+	death_overlay.modulate = Color(0.922, 0.2, 0.2, 0.55)
+	death_overlay.visible  = true
+	var tw := create_tween()
+	tw.tween_property(death_overlay, "modulate:a", 0.0, 0.35)
+	await tw.finished
+	death_overlay.visible = false
 
 func _on_exit_entered(body: Node) -> void:
 	if body.is_in_group("player") and not level_ending:
