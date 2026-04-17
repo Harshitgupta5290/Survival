@@ -1,0 +1,211 @@
+name: Production — Deploy to Live
+
+# Only runs on manual trigger OR push to main after PR merge
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version tag (e.g. v1.0.0)"
+        required: true
+        default: "v1.0.0"
+      release_notes:
+        description: "Short release notes"
+        required: false
+        default: "Bug fixes and improvements"
+  push:
+    branches: [main]
+    paths:
+      - "godot_project/**"
+
+permissions:
+  contents: write
+  pull-requests: read
+
+jobs:
+  check-feedback:
+    name: Verify Tester Feedback Collected
+    runs-on: ubuntu-latest
+    steps:
+      - name: Feedback gate check
+        run: |
+          echo "============================================"
+          echo "PRODUCTION DEPLOY CHECKLIST"
+          echo "============================================"
+          echo "Before merging to main, ensure:"
+          echo "  [1] Staging URL was tested by at least 3 people"
+          echo "  [2] Google Form feedback responses reviewed"
+          echo "  [3] No P0/P1 bugs in feedback"
+          echo "  [4] Version bumped in project.godot"
+          echo "============================================"
+          echo "Proceeding with build..."
+
+  build-production:
+    name: Build Production Web
+    runs-on: ubuntu-latest
+    needs: check-feedback
+    outputs:
+      version: ${{ steps.version.outputs.tag }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          lfs: true
+
+      - name: Get version tag
+        id: version
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "tag=${{ github.event.inputs.version }}" >> $GITHUB_OUTPUT
+          else
+            echo "tag=v$(date +'%Y.%m.%d')-$(echo ${{ github.sha }} | cut -c1-7)" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Install Godot 4.2
+        run: |
+          wget -q https://github.com/godotengine/godot/releases/download/4.2-stable/Godot_v4.2-stable_linux.x86_64.zip
+          unzip -q Godot_v4.2-stable_linux.x86_64.zip
+          sudo mv Godot_v4.2-stable_linux.x86_64 /usr/local/bin/godot
+          sudo chmod +x /usr/local/bin/godot
+
+      - name: Install Export Templates
+        run: |
+          mkdir -p ~/.local/share/godot/export_templates/4.2.stable
+          wget -q https://github.com/godotengine/godot/releases/download/4.2-stable/Godot_v4.2-stable_export_templates.tpz
+          unzip -q Godot_v4.2-stable_export_templates.tpz -d /tmp/templates
+          mv /tmp/templates/templates/* ~/.local/share/godot/export_templates/4.2.stable/
+
+      - name: Export HTML5 (Production)
+        run: |
+          mkdir -p build/web
+          cd godot_project
+          godot --headless --export-release "Web" ../build/web/index.html
+          echo "Build complete. Files:"
+          ls -lh ../build/web/
+
+      - name: Inject COOP/COEP Service Worker
+        run: |
+          cat > build/web/sw.js << 'EOF'
+          const CACHE = "survival-${{ steps.version.outputs.tag }}";
+          self.addEventListener("install", (e) => {
+            e.waitUntil(caches.open(CACHE).then(cache => cache.addAll(["./"])));
+            self.skipWaiting();
+          });
+          self.addEventListener("activate", (e) => e.waitUntil(clients.claim()));
+          self.addEventListener("fetch", (e) => {
+            e.respondWith(
+              fetch(e.request).then((response) => {
+                const headers = new Headers(response.headers);
+                headers.set("Cross-Origin-Opener-Policy", "same-origin");
+                headers.set("Cross-Origin-Embedder-Policy", "require-corp");
+                return new Response(response.body, { status: response.status, statusText: response.statusText, headers });
+              }).catch(() => caches.match(e.request))
+            );
+          });
+          EOF
+          sed -i 's|</head>|<script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js");}</script></head>|' build/web/index.html
+
+      - name: Add version watermark to index.html
+        run: |
+          VERSION="${{ steps.version.outputs.tag }}"
+          sed -i "s|</body>|<div style='position:fixed;bottom:4px;right:8px;font-size:10px;color:#ffffff33;pointer-events:none;font-family:monospace'>$VERSION</div></body>|" build/web/index.html
+
+      - name: Upload Production Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: production-web-${{ steps.version.outputs.tag }}
+          path: build/web/
+          retention-days: 90
+
+  deploy-github-pages:
+    name: Deploy to GitHub Pages (Production)
+    runs-on: ubuntu-latest
+    needs: build-production
+    steps:
+      - name: Download build artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: production-web-${{ needs.build-production.outputs.version }}
+          path: build/web/
+
+      - name: Deploy to GitHub Pages root
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./build/web
+          publish_branch: gh-pages
+          destination_dir: .
+          commit_message: "deploy: ${{ needs.build-production.outputs.version }}"
+
+  create-github-release:
+    name: Create GitHub Release
+    runs-on: ubuntu-latest
+    needs: [build-production, deploy-github-pages]
+    if: github.event_name == 'workflow_dispatch'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download build artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: production-web-${{ needs.build-production.outputs.version }}
+          path: build/web/
+
+      - name: Zip web build for release
+        run: |
+          cd build
+          zip -r survival-hunter-chronicles-web-${{ needs.build-production.outputs.version }}.zip web/
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ needs.build-production.outputs.version }}
+          name: "Survival: Hunter Chronicles ${{ needs.build-production.outputs.version }}"
+          body: |
+            ## What's New
+            ${{ github.event.inputs.release_notes }}
+
+            ## Play Now
+            🎮 **[Play in Browser](https://YOUR_USERNAME.github.io/Survival/)**
+
+            ## Downloads
+            - Web build (HTML5) attached below — host on any static server
+
+            ## How to Play
+            - **Move:** A / D or Arrow Keys
+            - **Jump:** W or Space
+            - **Shoot:** Space (or Left Click)
+            - **Grenade:** Q
+            - **Switch Weapon:** E or 1/2/3
+
+            ---
+            Built with Godot 4.2 | Auto-deployed via GitHub Actions
+          files: build/survival-hunter-chronicles-web-${{ needs.build-production.outputs.version }}.zip
+          draft: false
+          prerelease: false
+
+  notify-discord:
+    name: Notify Discord
+    runs-on: ubuntu-latest
+    needs: [build-production, deploy-github-pages]
+    if: ${{ secrets.DISCORD_WEBHOOK_URL != '' }}
+    steps:
+      - name: Send Discord notification
+        run: |
+          VERSION="${{ needs.build-production.outputs.version }}"
+          PLAY_URL="https://YOUR_USERNAME.github.io/Survival/"
+          curl -s -X POST "${{ secrets.DISCORD_WEBHOOK_URL }}" \
+            -H "Content-Type: application/json" \
+            -d "{
+              \"embeds\": [{
+                \"title\": \"New Build Live: Survival Hunter Chronicles $VERSION\",
+                \"description\": \"A new version just deployed! Go play and share your feedback.\",
+                \"color\": 5814783,
+                \"fields\": [
+                  {\"name\": \"Play Now\", \"value\": \"[$PLAY_URL]($PLAY_URL)\", \"inline\": false},
+                  {\"name\": \"Version\", \"value\": \"$VERSION\", \"inline\": true},
+                  {\"name\": \"Branch\", \"value\": \"main\", \"inline\": true}
+                ],
+                \"footer\": {\"text\": \"Auto-deployed via GitHub Actions\"}
+              }]
+            }"

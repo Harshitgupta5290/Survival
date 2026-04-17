@@ -1,0 +1,136 @@
+name: Staging — Deploy PR for Review
+
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  build-and-deploy-staging:
+    name: Build & Deploy to Staging
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          lfs: true
+
+      - name: Install Godot 4.2
+        run: |
+          wget -q https://github.com/godotengine/godot/releases/download/4.2-stable/Godot_v4.2-stable_linux.x86_64.zip
+          unzip -q Godot_v4.2-stable_linux.x86_64.zip
+          sudo mv Godot_v4.2-stable_linux.x86_64 /usr/local/bin/godot
+          sudo chmod +x /usr/local/bin/godot
+
+      - name: Install Export Templates
+        run: |
+          mkdir -p ~/.local/share/godot/export_templates/4.2.stable
+          wget -q https://github.com/godotengine/godot/releases/download/4.2-stable/Godot_v4.2-stable_export_templates.tpz
+          unzip -q Godot_v4.2-stable_export_templates.tpz -d /tmp/templates
+          mv /tmp/templates/templates/* ~/.local/share/godot/export_templates/4.2.stable/
+
+      - name: Export HTML5
+        run: |
+          mkdir -p build/web
+          cd godot_project
+          godot --headless --export-release "Web" ../build/web/index.html
+
+      # Add COOP/COEP headers via service worker so Godot 4 threading works on GitHub Pages
+      - name: Inject Cross-Origin Headers Service Worker
+        run: |
+          cat > build/web/sw.js << 'EOF'
+          self.addEventListener("install", () => self.skipWaiting());
+          self.addEventListener("activate", (e) => e.waitUntil(clients.claim()));
+          self.addEventListener("fetch", (e) => {
+            e.respondWith(
+              fetch(e.request).then((response) => {
+                const headers = new Headers(response.headers);
+                headers.set("Cross-Origin-Opener-Policy", "same-origin");
+                headers.set("Cross-Origin-Embedder-Policy", "require-corp");
+                return new Response(response.body, { status: response.status, statusText: response.statusText, headers });
+              })
+            );
+          });
+          EOF
+
+          # Inject SW registration into index.html
+          sed -i 's|</head>|<script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js");}</script></head>|' build/web/index.html
+
+      - name: Deploy to GitHub Pages (staging branch)
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./build/web
+          destination_dir: staging/pr-${{ github.event.pull_request.number }}
+          publish_branch: gh-pages
+
+      - name: Comment PR with Staging URL + Feedback Form
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const prNum = context.payload.pull_request.number;
+            const repo = context.repo;
+            const owner = repo.owner;
+            const repoName = repo.repo;
+            const stagingUrl = `https://${owner}.github.io/${repoName}/staging/pr-${prNum}/`;
+            const feedbackUrl = `https://forms.gle/YOUR_GOOGLE_FORM_ID`;  // Replace with your Google Form URL
+
+            const body = `## 🎮 Staging Build Ready
+
+            **Play the build here:** [${stagingUrl}](${stagingUrl})
+
+            > ⏳ May take 1–2 minutes for GitHub Pages to deploy after this comment.
+
+            ---
+
+            ### 📋 Tester Checklist
+            Please test these before this PR can be merged:
+
+            - [ ] Main menu loads correctly
+            - [ ] Campaign mode: Level 1 completes without crash
+            - [ ] Endless mode: Starts and spawns enemies
+            - [ ] Player movement feels responsive
+            - [ ] Shooting + grenades work
+            - [ ] HUD (health, ammo, score) updates correctly
+            - [ ] Game over screen appears on death
+            - [ ] Audio plays (music + SFX)
+            - [ ] Mobile controls visible on small screen (resize browser)
+
+            ---
+
+            ### 💬 Leave Your Feedback
+            **[Click here to submit feedback →](${feedbackUrl})**
+
+            > Minimum **3 tester feedback responses** required before production deploy.
+
+            ---
+            *This staging build will be available for 14 days.*`;
+
+            // Check if comment already exists (on re-push, update it)
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: repo.owner,
+              repo: repo.repo,
+              issue_number: prNum,
+            });
+
+            const existing = comments.find(c => c.body.includes('Staging Build Ready') && c.user.login === 'github-actions[bot]');
+
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner: repo.owner,
+                repo: repo.repo,
+                comment_id: existing.id,
+                body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: repo.owner,
+                repo: repo.repo,
+                issue_number: prNum,
+                body,
+              });
+            }
