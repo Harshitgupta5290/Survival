@@ -37,6 +37,10 @@ func _ready() -> void:
 	btn_settings.pressed.connect(_on_settings)
 	btn_quit.pressed.connect(_on_quit)
 
+	var platform := OS.get_name()
+	if platform == "Web" or platform == "Android" or platform == "iOS":
+		btn_quit.visible = false
+
 	leaderboard_panel.get_node("VBox/BtnClose").pressed.connect(
 		func(): leaderboard_panel.visible = false)
 

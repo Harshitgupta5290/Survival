@@ -1,0 +1,14 @@
+[remap]
+
+importer="csv_translation"
+type="Translation"
+uid="uid://b87n1xic5svym"
+
+[deps]
+
+source_file="res://assets/levels/tutorial_data.csv"
+
+[params]
+
+compress=true
+delimiter=0

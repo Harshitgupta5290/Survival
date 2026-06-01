@@ -1,0 +1,18 @@
+# Godot cache
+godot_project/.godot/
+
+# Export outputs
+build/
+
+# Keystore (never commit credentials)
+godot_project/*.keystore
+godot_project/release.keystore
+*.keystore
+
+# Python cache
+__pycache__/
+*.pyc
+
+# OS files
+.DS_Store
+Thumbs.db

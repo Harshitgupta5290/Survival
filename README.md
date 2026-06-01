@@ -79,6 +79,17 @@ Survival/
 | `HealthBar` | HUD health display |
 | `ScreenFade` | Transition effects for level start and death |
 
+## Godot Version
+
+The game has been fully ported to **Godot 4.5** with expanded features (boss fight, endless mode, mobile controls, XP system, leaderboard). See [`godot_project/RUN.md`](godot_project/RUN.md) to run it.
+
+## Deployment
+
+See [`DEPLOY.md`](DEPLOY.md) for step-by-step instructions to publish to:
+- **Vercel** (live web)
+- **Google Play** (Android AAB)
+- **Gumroad** (sell the build)
+
 ## License
 
 See [LICENSE](LICENSE) for details.

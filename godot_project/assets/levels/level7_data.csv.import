@@ -1,0 +1,14 @@
+[remap]
+
+importer="csv_translation"
+type="Translation"
+uid="uid://wmg7yf8br17"
+
+[deps]
+
+source_file="res://assets/levels/level7_data.csv"
+
+[params]
+
+compress=true
+delimiter=0

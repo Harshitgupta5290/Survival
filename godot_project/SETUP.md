@@ -45,24 +45,28 @@ Press **F5** (or the Play button). The game should start at the main menu.
 
 ---
 
-## STEP 5: Export to Web (for Poki / itch.io)
+## STEP 5: Export to Web
 
 1. In Godot: **Project → Export**
-2. Add preset: **Web**
-3. Set output file to `export/web/index.html`
-4. Enable **Export PCK/ZIP** → uncheck
-5. Click **Export Project**
+2. Select the **Web** preset (already configured in `export_presets.cfg`)
+3. Click **Export Project** → outputs to `build/web/`
 
-### Upload to itch.io (free, takes 5 minutes)
-- Create account at https://itch.io
-- Upload the `export/web/` folder as a ZIP
+### Deploy to Vercel (1 minute)
+- `vercel.json` at the root is already configured with required COOP/COEP headers
+- Run `npx vercel` from the project root — it reads `outputDirectory: "build/web"` automatically
+- Or connect the GitHub repo at vercel.com → it auto-deploys on push
+
+### Sell on Gumroad
+- Export the web build first (step above)
+- ZIP the `build/web/` folder
+- Upload to Gumroad as a digital product
+- Set "Content type" = File, price as desired
+- The PWA is enabled — buyers can install the game to their home screen
+
+### Upload to itch.io
+- Upload the `build/web/` folder as a ZIP
 - Set "Kind of project" = HTML
-- Publish → share your link
-
-### Apply to Poki
-- Go to https://developers.poki.com
-- Submit your HTML5 build
-- Poki reviews within 2–4 weeks
+- Check "This file will be played in the browser"
 
 ---
 
@@ -73,20 +77,39 @@ Press **F5** (or the Play button). The game should start at the main menu.
 - Java JDK 17+
 - Android SDK
 
+### Create a release keystore (one-time)
+```bash
+keytool -genkey -v \
+  -keystore godot_project/release.keystore \
+  -alias survival \
+  -keyalg RSA -keysize 2048 -validity 10000 \
+  -storepass YOUR_PASSWORD -keypass YOUR_PASSWORD \
+  -dname "CN=Harshit, OU=Games, O=Studio, L=City, S=State, C=IN"
+```
+
+Then open `export_presets.cfg` and replace `CHANGE_ME` with your actual password.
+
+> **The keystore file is gitignored — never commit it.**
+
 ### Steps in Godot
-1. **Project → Export → Add → Android**
-2. Fill in:
-   - Package name: `com.yourstudio.survivalhunter`
-   - Version name / code
-   - Keystore (create with `keytool` — Google it)
-3. Click **Export Project** → generates `.aab` file
+1. Editor → Export → **Android** preset is already configured
+2. Verify keystore paths in the preset match where you saved the file
+3. Click **Export Project** → outputs `build/android/survival_hunter_chronicles.aab`
 
 ### Upload to Google Play
 1. Go to https://play.google.com/console
 2. Create developer account ($25 one-time fee)
-3. Create new app → upload your `.aab`
+3. Create new app → upload the `.aab` file (Play Store requires AAB, not APK)
 4. Fill in store listing (title, description, screenshots)
 5. Submit for review (~3 days)
+
+### Store listing copy (ready to paste)
+**Title:** Survival: Hunter Chronicles  
+**Short description:** Fight through enemy hordes in this intense 2D side-scrolling shooter.  
+**Full description:**  
+Blast your way through 7 hand-crafted levels plus infinite Endless Mode. Pick up weapons, throw grenades, and face a 3-phase boss. Features XP levelling, daily challenges, achievements, and an online leaderboard.  
+**Category:** Action  
+**Content rating:** Teen (Fantasy Violence)
 
 ---
 
