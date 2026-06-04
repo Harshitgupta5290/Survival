@@ -9,6 +9,7 @@ var owner_type  : String = "player"
 var speed       : float = Constants.BULLET_SPEED
 var damage      : int   = Constants.BULLET_DAMAGE_ENEMY
 var lifetime    : float = 1.2
+var is_crit     : bool  = false
 
 @onready var sprite : Sprite2D = $Sprite2D
 
@@ -57,7 +58,7 @@ func _on_body_entered(body: Node) -> void:
 		return
 	if owner_type == "player" and body.is_in_group("enemy"):
 		if body.has_method("take_damage"):
-			body.take_damage(damage)
+			body.take_damage(damage, is_crit)
 		queue_free()
 	elif owner_type == "enemy" and body.is_in_group("player"):
 		if body.has_method("take_damage"):

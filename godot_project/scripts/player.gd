@@ -174,6 +174,8 @@ func _shoot() -> void:
 	ammo -= 1
 	emit_signal("ammo_changed", ammo)
 	AudioManager.play_sfx("shoot")
+	if muzzle_fx:
+		muzzle_fx.restart()
 
 	var ws       := WeaponManager.get_stats()
 	var pellets  : int   = ws["pellets"]
@@ -182,6 +184,7 @@ func _shoot() -> void:
 	var spd      : float = ws["speed"]
 	var dir_sign : int   = 1 if facing_right else -1
 	var proj_node : Node = get_tree().current_scene.get_node("Projectiles")
+	var is_crit  : bool  = randf() < 0.15
 
 	for i in pellets:
 		var angle_offset := 0.0
@@ -191,7 +194,8 @@ func _shoot() -> void:
 		bullet.global_position = shoot_pos.global_position if shoot_pos else global_position
 		bullet.set_direction(dir_sign, angle_offset)
 		bullet.set_owner_type("player")
-		bullet.set_damage(damage)
+		bullet.set_damage(damage * 2 if is_crit else damage)
+		bullet.is_crit = is_crit
 		bullet.set_speed(spd)
 		proj_node.add_child(bullet)
 

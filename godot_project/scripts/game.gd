@@ -35,6 +35,8 @@ var scroll_offset : float  = 0.0
 var level_max_x   : float  = 6000.0
 const SCROLL_THRESH : int  = Constants.SCROLL_THRESH
 
+var ai_director : Node = null
+
 # Tutorial
 var is_tutorial       : bool = false
 var tutorial_overlay  : Node = null
@@ -135,6 +137,8 @@ func _setup_level_from_spawn(spawn_data: Dictionary, banner_text: String) -> voi
 			director.spawn_boss.connect(_spawn_boss)
 		if not director.spawn_enemies.is_connected(_on_director_spawn):
 			director.spawn_enemies.connect(_on_director_spawn)
+		director.start(1, player_node, entities)
+		ai_director = director
 
 func _on_director_spawn(count: int, _squad_type: String, near_pos: Vector2) -> void:
 	for i in count:
@@ -156,6 +160,8 @@ func _physics_process(delta: float) -> void:
 		return
 
 	_update_scroll()
+	if ai_director:
+		ai_director.tick(delta)
 
 func _update_scroll() -> void:
 	if player_node == null:
@@ -198,7 +204,7 @@ func _spawn_enemy(pos: Vector2) -> void:
 	e.add_to_group("enemy")
 	entities.add_child(e)
 	e.enemy_died.connect(_on_enemy_died)
-	e.enemy_hit.connect(func(amt, p): _spawn_damage_number(p + Vector2(0, -40), amt))
+	e.enemy_hit.connect(func(amt, p, crit): _spawn_damage_number(p + Vector2(0, -40), amt, false, crit))
 
 func _spawn_boss(pos: Vector2) -> void:
 	var b : Node2D = boss_scene.instantiate()
@@ -284,7 +290,7 @@ func _on_enemy_died(pos: Vector2) -> void:
 	_hit_stop(0.06)
 	_spawn_damage_number(pos, 0, true)   # "KILL!" flash at death pos
 
-func _spawn_damage_number(pos: Vector2, dmg: int, is_kill: bool = false) -> void:
+func _spawn_damage_number(pos: Vector2, dmg: int, is_kill: bool = false, is_crit: bool = false) -> void:
 	var dn := damage_number_scene.instantiate()
 	effects.add_child(dn)
 	if is_kill:
@@ -294,7 +300,7 @@ func _spawn_damage_number(pos: Vector2, dmg: int, is_kill: bool = false) -> void
 		lbl.modulate = Color(1, 0.84, 0)
 		lbl.theme_override_font_sizes["font_size"] = 18
 	else:
-		dn.setup(dmg, pos)
+		dn.setup(dmg, pos, is_crit)
 
 func _hit_stop(duration: float = 0.07) -> void:
 	Engine.time_scale = 0.04

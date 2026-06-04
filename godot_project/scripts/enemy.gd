@@ -15,7 +15,7 @@ extends CharacterBody2D
 class_name Enemy
 
 signal enemy_died(position: Vector2)
-signal enemy_hit(amount: int, position: Vector2)
+signal enemy_hit(amount: int, position: Vector2, is_crit: bool)
 
 # ── AI States ────────────────────────────────
 enum State { PATROL, ALERT, ATTACK, TAKE_COVER, FLEE, DEAD }
@@ -225,11 +225,20 @@ func _throw_grenade() -> void:
 	get_tree().current_scene.get_node("Projectiles").add_child(g)
 	AudioManager.play_sfx("grenade")
 
-func take_damage(amount: int) -> void:
+func take_damage(amount: int, is_crit: bool = false) -> void:
 	if not alive:
 		return
 	health -= amount
-	emit_signal("enemy_hit", amount, global_position)
+	emit_signal("enemy_hit", amount, global_position, is_crit)
+
+	# Knockback: push away from whoever shot (inferred from player position)
+	if player_ref != null and is_instance_valid(player_ref):
+		var kb_dir := int(sign(global_position.x - player_ref.global_position.x))
+		if kb_dir == 0:
+			kb_dir = 1
+		velocity.x = kb_dir * 160.0
+		velocity.y = -60.0
+
 	# Flash white then back (feels more impactful than red)
 	sprite.modulate = Color(2.0, 2.0, 2.0)
 	await get_tree().create_timer(0.05).timeout

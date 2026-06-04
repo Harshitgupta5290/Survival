@@ -1,8 +1,10 @@
 # Godot cache
 godot_project/.godot/
 
-# Export outputs
-build/
+# Export outputs (web build is committed for Vercel)
+build/android/
+build/linux/
+build/windows/
 
 # Keystore (never commit credentials)
 godot_project/*.keystore

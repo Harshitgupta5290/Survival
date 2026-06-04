@@ -197,7 +197,16 @@ func _show_next_achievement() -> void:
 func show_death_screen(score: int, hi_score: int) -> void:
 	death_screen.visible   = true
 	death_score_label.text = "SCORE: %d" % score
-	death_hi_label.text    = "BEST: %d" % hi_score
+	if score >= hi_score and hi_score > 0:
+		death_hi_label.text    = "NEW BEST: %d!  Keep going!" % hi_score
+		death_hi_label.modulate = Color(1, 0.9, 0.1)
+	elif score < hi_score:
+		var gap := hi_score - score
+		death_hi_label.text    = "BEST: %d  (just %d pts away!)" % [hi_score, gap]
+		death_hi_label.modulate = Color(1, 1, 1)
+	else:
+		death_hi_label.text    = "BEST: %d" % hi_score
+		death_hi_label.modulate = Color(1, 1, 1)
 	# Auto-submit to leaderboard if score qualifies
 	if score > 0 and Leaderboard.ENABLED:
 		Leaderboard.submit_score("HNT", score)   # default name; add name input later
